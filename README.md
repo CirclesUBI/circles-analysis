@@ -14,7 +14,7 @@ Analysis and statistics toolkit for [Circles](https://joincircles.net/), display
 ## Example
 
 ```bash
-$ circles-analytics --output example.csv --format csv velocity
+$ circles-analysis --output example.csv --format csv velocity
 Analyse "velocity" (transfer velocity):
 Request all "notifications" data from Graph ...
 ◆ Total days recorded: 112
@@ -33,9 +33,9 @@ npm i -g @circles/analysis
 ## Usage
 
 ```bash
-Usage: circles-analytics [options] [command]
+Usage: circles-analysis [options] [command]
 
-Circles statistics and analytics toolkit
+Circles statistics and analysis toolkit
 
 Options:
   -V, --version             output the version number
@@ -62,7 +62,7 @@ Commands:
 npm install
 
 // Run commands like ..
-./circles-analytics --output results.csv velocity
+./circles-analysis --output results.csv velocity
 ```
 
 ## License
