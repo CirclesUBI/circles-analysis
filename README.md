@@ -13,7 +13,7 @@ Analysis and statistics toolkit for [Circles](https://joincircles.net/), display
 
 ## Example
 
-```bash
+```
 $ circles-analysis --output example.csv --format csv velocity
 Analyse "velocity" (transfer velocity):
 Request all "notifications" data from Graph ...
@@ -26,13 +26,13 @@ Stored results in example.csv
 
 ## Installation
 
-```bash
+```
 npm i -g @circles/analysis
 ```
 
 ## Usage
 
-```bash
+```
 Usage: circles-analysis [options] [command]
 
 Circles statistics and analysis toolkit
@@ -57,7 +57,7 @@ Commands:
 
 ## Development
 
-```bash
+```
 // Install dependencies
 npm install
 
