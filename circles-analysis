@@ -308,7 +308,7 @@ async function main() {
         // Set configuration
         configuration.endpoint = options.parent.endpoint;
         configuration.format = options.parent.format;
-        configuration.safeAddress = options.parent.safeAddress;
+        configuration.safeAddress = options.parent.safe_address;
 
         // Execute command!
         try {
