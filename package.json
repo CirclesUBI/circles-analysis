@@ -13,10 +13,10 @@
   },
   "homepage": "https://github.com/CirclesUBI/circles-analysis#readme",
   "scripts": {
-    "start": "node index.js"
+    "start": "./circles-analysis"
   },
   "bin": {
-    "circles-analysis": "node index.js"
+    "circles-analysis": "circles-analysis"
   },
   "dependencies": {
     "bn.js": "^5.1.2",
