@@ -9,7 +9,7 @@
   </a>
 </p>
 
-Analysis and statistics toolkit for [Circles](https://joincircles.net/), displaying basic metrics and exporting tabular data for further analysis in .csv format.
+Analysis and statistics toolkit for [Circles](https://joincircles.net/), displaying basic metrics and exporting tabular data for further analysis in .csv or .json format.
 
 ## Example
 
