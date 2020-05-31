@@ -3,7 +3,7 @@
 const BN = require('bn.js');
 const chalk = require('chalk');
 const fs = require('fs');
-const stringify = require('csv-stringify')
+const stringify = require('csv-stringify');
 const web3 = require('web3');
 const { Interval, DateTime } = require('luxon');
 const { program } = require('commander');
@@ -13,7 +13,8 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const PAGINATION_SIZE = 500;
 
 const configuration = {
-  endpoint: 'https://graph.circles.garden/subgraphs/name/CirclesUBI/circles-subgraph',
+  endpoint:
+    'https://graph.circles.garden/subgraphs/name/CirclesUBI/circles-subgraph',
   safeAddress: '0x812d4e73eb6b8200a62469ec3249fb02eac58c91',
   format: 'csv',
 };
@@ -24,10 +25,53 @@ const pkg = require('./package.json');
 program
   .version(pkg.version)
   .description(pkg.description)
-  .option('-e, --endpoint <url>', 'graphQL subgraph endpoint', configuration.endpoint)
-  .option('-f, --format <csv|json>', 'file format of output file', configuration.format)
+  .option(
+    '-e, --endpoint <url>',
+    'graphQL subgraph endpoint',
+    configuration.endpoint
+  )
+  .option(
+    '-f, --format <csv|json>',
+    'file format of output file',
+    configuration.format
+  )
   .option('-o, --output <path>', 'optional file output for tabular data')
-  .option('-s, --safe_address <str>', 'contract address of relayer safe', configuration.safeAddress);
+  .option(
+    '-s, --safe_address <str>',
+    'contract address of relayer safe',
+    configuration.safeAddress
+  );
+
+// Utility methods to store tabular data
+
+function convertToCsv(data) {
+  return new Promise((resolve, reject) => {
+    stringify(
+      data,
+      {
+        header: true,
+        quoted: true,
+      },
+      (error, output) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(output);
+        }
+      }
+    );
+  });
+}
+
+function convertToJson(data) {
+  return new Promise((resolve, reject) => {
+    try {
+      resolve(JSON.stringify(data));
+    } catch {
+      reject(new Error('Invalid JSON'));
+    }
+  });
+}
 
 // Utility methods to display results
 
@@ -41,14 +85,23 @@ function weiToCircles(wei) {
 
 // Utility methods to fetch data
 
-async function fetchFromGraph(name, fields, extra = '', skip = 0, first = PAGINATION_SIZE) {
+async function fetchFromGraph(
+  name,
+  fields,
+  extra = '',
+  skip = 0,
+  first = PAGINATION_SIZE
+) {
   const query = `{
     ${name}(${extra} first: ${first}, skip: ${skip}) {
       ${fields}
     }
   }`;
 
-  const data = await request(configuration.endpoint, query.replace(/\s\s+/g, ' '));
+  const data = await request(
+    configuration.endpoint,
+    query.replace(/\s\s+/g, ' ')
+  );
   return data[name];
 }
 
@@ -71,10 +124,12 @@ async function fetchAllFromGraph(name, fields, extra = '') {
   console.log(`Request all "${name}" data from Graph ...`);
 
   for await (let data of fetchGraphGenerator(name, fields, extra)) {
-    result = result.concat(data.map(entry => {
-      entry.index = ++index;
-      return entry;
-    }));
+    result = result.concat(
+      data.map((entry) => {
+        entry.index = ++index;
+        return entry;
+      })
+    );
   }
 
   return result;
@@ -107,11 +162,11 @@ const count = (arr) => {
 
     return acc;
   }, {});
-}
+};
 
-const pick = (arr, key) => arr.map(item => item[key]);
+const pick = (arr, key) => arr.map((item) => item[key]);
 
-const pickInt = (arr, key) => arr.map(item => parseInt(item[key]));
+const pickInt = (arr, key) => arr.map((item) => parseInt(item[key]));
 
 // The actual analysis commands
 
@@ -119,19 +174,35 @@ const analyses = {
   transitive: {
     description: 'transitive transactions in the Circles hub',
     command: async () => {
-      const hubTransfers = await fetchAllFromGraph('hubTransfers', 'id from to amount');
+      const hubTransfers = await fetchAllFromGraph(
+        'hubTransfers',
+        'id from to amount'
+      );
 
-      print('Average amount', weiToCircles(avgBN(pick(hubTransfers, 'amount'))));
-      print('Average total received transfers per user', avg(Object.values(count(hubTransfers).from)));
-      print('Max total received transfers per user', Math.max(...Object.values(count(hubTransfers).to)));
+      print(
+        'Average amount',
+        weiToCircles(avgBN(pick(hubTransfers, 'amount')))
+      );
+      print(
+        'Average total received transfers per user',
+        avg(Object.values(count(hubTransfers).from))
+      );
+      print(
+        'Max total received transfers per user',
+        Math.max(...Object.values(count(hubTransfers).to))
+      );
 
       return hubTransfers;
     },
   },
   transfers: {
-    description: 'regular transfer transactions including ubi payouts and gas fees',
+    description:
+      'regular transfer transactions including ubi payouts and gas fees',
     command: async () => {
-      const transfers = await fetchAllFromGraph('transfers', 'id from to amount');
+      const transfers = await fetchAllFromGraph(
+        'transfers',
+        'id from to amount'
+      );
 
       const ubiPayouts = transfers.filter((item) => {
         return item.from === ZERO_ADDRESS;
@@ -146,7 +217,10 @@ const analyses = {
       }, new BN());
 
       print('Average amount', weiToCircles(avgBN(pick(transfers, 'amount'))));
-      print('Average UBI payout amount', weiToCircles(avgBN(pick(ubiPayouts, 'amount'))));
+      print(
+        'Average UBI payout amount',
+        weiToCircles(avgBN(pick(ubiPayouts, 'amount')))
+      );
       print('UBI payouts count', ubiPayouts.length);
       print('Total gas fees amount (in wei)', gasFeesSum);
       print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')));
@@ -157,7 +231,10 @@ const analyses = {
   trusts: {
     description: 'trust connection events',
     command: async () => {
-      const trusts = await fetchAllFromGraph('trusts', 'id canSendToAddress userAddress limit limitPercentage');
+      const trusts = await fetchAllFromGraph(
+        'trusts',
+        'id canSendToAddress userAddress limit limitPercentage'
+      );
 
       const revokedTrusts = trusts.filter((item) => {
         return item.limitPercentage === '0';
@@ -169,11 +246,22 @@ const analyses = {
 
       print('Created trust connections', createdTrusts.length);
       print('Revoked trust connections', revokedTrusts.length);
-
-      print('Average outgoing trust connections', avg(Object.values(count(createdTrusts).canSendToAddress)));
-      print('Average incoming trust connections', avg(Object.values(count(createdTrusts).userAddress)));
-      print('Max outgoing trust connections', Math.max(...Object.values(count(createdTrusts).userAddress)));
-      print('Max incoming trust connections', Math.max(...Object.values(count(createdTrusts).canSendToAddress)));
+      print(
+        'Average outgoing trust connections',
+        avg(Object.values(count(createdTrusts).canSendToAddress))
+      );
+      print(
+        'Average incoming trust connections',
+        avg(Object.values(count(createdTrusts).userAddress))
+      );
+      print(
+        'Max outgoing trust connections',
+        Math.max(...Object.values(count(createdTrusts).userAddress))
+      );
+      print(
+        'Max incoming trust connections',
+        Math.max(...Object.values(count(createdTrusts).canSendToAddress))
+      );
 
       return trusts;
     },
@@ -181,7 +269,10 @@ const analyses = {
   ownerships: {
     description: 'safe ownership events / device changes',
     command: async () => {
-      const ownershipChanges = await fetchAllFromGraph('ownershipChanges', 'id adds removes');
+      const ownershipChanges = await fetchAllFromGraph(
+        'ownershipChanges',
+        'id adds removes'
+      );
       const safes = await fetchAllFromGraph('safes', 'id');
 
       const adds = ownershipChanges.filter((item) => {
@@ -215,8 +306,14 @@ const analyses = {
         return acc;
       }, {});
 
-      print('Average total balance per Safe', weiToCircles(avgBN(Object.values(totalBalance))));
-      print('Max total balance per Safe', weiToCircles(maxBN(Object.values(totalBalance))));
+      print(
+        'Average total balance per Safe',
+        weiToCircles(avgBN(Object.values(totalBalance)))
+      );
+      print(
+        'Max total balance per Safe',
+        weiToCircles(maxBN(Object.values(totalBalance)))
+      );
 
       const safesFormatted = safes.map((safe, index) => {
         return {
@@ -232,7 +329,11 @@ const analyses = {
   velocity: {
     description: 'transfer velocity',
     command: async () => {
-      const notifications = await fetchAllFromGraph('notifications', 'id time hubTransfer { id from to amount }', 'where: { type: HUB_TRANSFER }');
+      const notifications = await fetchAllFromGraph(
+        'notifications',
+        'id time hubTransfer { id from to amount }',
+        'where: { type: HUB_TRANSFER }'
+      );
 
       const data = {};
       let timestampMin = 9999999999999;
@@ -251,18 +352,18 @@ const analyses = {
           data[dateFormatted] = new BN();
         }
 
-        data[dateFormatted] = data[dateFormatted].add(new BN(hubTransfer.amount));
+        data[dateFormatted] = data[dateFormatted].add(
+          new BN(hubTransfer.amount)
+        );
       });
 
       // Fill in days without any transfers
-      const interval = Interval
-        .fromDateTimes(
-          DateTime.fromMillis(timestampMin),
-          DateTime.fromMillis(timestampMax)
-        )
-        .splitBy({ days: 1 });
+      const interval = Interval.fromDateTimes(
+        DateTime.fromMillis(timestampMin),
+        DateTime.fromMillis(timestampMax)
+      ).splitBy({ days: 1 });
 
-      interval.forEach(intervalDay => {
+      interval.forEach((intervalDay) => {
         const dateFormatted = intervalDay.start.toFormat('yyyy/MM/dd');
 
         if (!(dateFormatted in data)) {
@@ -285,8 +386,14 @@ const analyses = {
         });
 
       print('Total days recorded', velocity.length);
-      print('Velocity (Circles / Day)', weiToCircles(avgBN(pick(velocity, 'amount'))));
-      print('Max velocity (one day)', weiToCircles(maxBN(pick(velocity, 'amount'))));
+      print(
+        'Velocity (Circles / Day)',
+        weiToCircles(avgBN(pick(velocity, 'amount')))
+      );
+      print(
+        'Max velocity (one day)',
+        weiToCircles(maxBN(pick(velocity, 'amount')))
+      );
 
       return velocity;
     },
@@ -298,12 +405,14 @@ const analyses = {
 async function main() {
   let result;
 
-  Object.keys(analyses).forEach(name => {
+  Object.keys(analyses).forEach((name) => {
     program
       .command(name)
       .description(analyses[name].description)
       .action(async (options) => {
-        console.log(chalk.bold(`Analyse "${name}" (${analyses[name].description}):`));
+        console.log(
+          chalk.bold(`Analyse "${name}" (${analyses[name].description}):`)
+        );
 
         // Set configuration
         configuration.endpoint = options.parent.endpoint;
@@ -331,34 +440,20 @@ async function main() {
 
   if (program.output) {
     try {
-      const fileContent = await new Promise((resolve, reject) => {
-        if (configuration.format === 'csv') {
-          stringify(result, {
-            header: true,
-            quoted: true,
-          }, (error, output) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(output);
-            }
-          });
-        } else if (configuration.format === 'json') {
-          try {
-            resolve(JSON.stringify(result));
-          } catch {
-            reject(new Error('Invalid JSON'));
-          }
-          resolve()
-        } else {
-          reject(new Error('Invalid export format'));
-        }
-      });
+      let fileContent;
+
+      if (configuration.format === 'csv') {
+        fileContent = await convertToCsv(result);
+      } else if (configuration.format === 'json') {
+        fileContent = await convertToJson(result);
+      } else {
+        throw new Error('Invalid export format');
+      }
 
       fs.writeFile(program.output, fileContent, (error) => {
         if (error) {
           throw error;
-        };
+        }
 
         console.log(`Stored results in ${program.output}`);
       });
