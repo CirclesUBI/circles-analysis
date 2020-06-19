@@ -8,13 +8,19 @@ const web3 = require('web3');
 const { Interval, DateTime } = require('luxon');
 const { program } = require('commander');
 const { request } = require('graphql-request');
+const { withQuery } = require('with-query');
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+// const RELAYER_ADDRESS = '0x812D4e73eB6B8200A62469Ec3249fB02EAC58C91';
+// const HUB_ADDRESS = '0x16CB267dBBbB2dDFe261c44a059284E5b11B3340';
 const PAGINATION_SIZE = 500;
 
 const configuration = {
-  endpoint:
+  graphEndpoint:
     'https://graph.circles.garden/subgraphs/name/CirclesUBI/circles-subgraph',
+  etherscanEndpoint: 'http://api-kovan.etherscan.io/api',
+  etherscanKey: 'Q3N6IPKQH885KBICAI53DBBV2RHFT3M99G',
+  relayerAddress: '0x812D4e73eB6B8200A62469Ec3249fB02EAC58C91',
   safeAddress: '0x812d4e73eb6b8200a62469ec3249fb02eac58c91',
   format: 'csv',
 };
@@ -26,14 +32,29 @@ program
   .version(pkg.version)
   .description(pkg.description)
   .option(
-    '-e, --endpoint <url>',
+    '-g, --graph_endpoint <url>',
     'graphQL subgraph endpoint',
-    configuration.endpoint
+    configuration.graphEndpoint
+  )
+  .option(
+    '-e, --etherscan_endpoint <url>',
+    'etherscan endpoint',
+    configuration.etherscanEndpoint
   )
   .option(
     '-f, --format <csv|json>',
     'file format of output file',
     configuration.format
+  )
+  .option(
+    '-k, --key <csv|json>',
+    'etherscan api key',
+    configuration.etherscanKey
+  )
+  .option(
+    '-r, --relayer <csv|json>',
+    'relayer address',
+    configuration.relayerAddress
   )
   .option('-o, --output <path>', 'optional file output for tabular data')
   .option(
@@ -99,7 +120,7 @@ async function fetchFromGraph(
   }`;
 
   const data = await request(
-    configuration.endpoint,
+    configuration.graphEndpoint,
     query.replace(/\s\s+/g, ' ')
   );
   return data[name];
@@ -133,6 +154,23 @@ async function fetchAllFromGraph(name, fields, extra = '') {
   }
 
   return result;
+}
+
+async function fetchFromEtherscan() {
+  const params = {
+    module: 'account',
+    action: 'txlist',
+    address: configuration.relayerAddress,
+    startblock: 0,
+    endblock: 99999999,
+    sort: 'asc',
+    apikey: configuration.etherscanKey
+  }
+  const url = configuration.etherscanEndpoint
+
+  const data = await fetch(withQuery(url, params));
+  const js = await data.json()
+  console.log(js);
 }
 
 // Utility methods to analyse data
@@ -326,6 +364,13 @@ const analyses = {
       return safesFormatted;
     },
   },
+  gas: {
+    description: 'transfer velocity',
+    command: async () => {
+      const txs = await fetchFromEtherscan();
+      return [{ done: true }];
+    }
+  },
   velocity: {
     description: 'transfer velocity',
     command: async () => {
@@ -415,9 +460,12 @@ async function main() {
         );
 
         // Set configuration
-        configuration.endpoint = options.parent.endpoint;
+        configuration.graphEndpoint = options.parent.graphEndpoint;
         configuration.format = options.parent.format;
         configuration.safeAddress = options.parent.safe_address;
+        configuration.relayerAddress = options.parent.relayer;
+        configuration.etherscanEndpoint = options.parent.etherscan_endpoint;
+        configuration.etherscanKey = options.parent.key
 
         // Execute command!
         try {
