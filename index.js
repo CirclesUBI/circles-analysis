@@ -1,10 +1,8 @@
+/* eslint-disable no-console */
 const BN = require('bn.js');
 const chalk = require('chalk');
-const fs = require('fs');
-const stringify = require('csv-stringify');
 const web3 = require('web3');
 const { Interval, DateTime } = require('luxon');
-const { program } = require('commander');
 const { request } = require('graphql-request');
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -18,7 +16,12 @@ const configuration = {
 };
 
 function setConfiguration(customConfiguration) {
-  const { endpoint, safeAddress, format } = Object.assign({}, configuration, customConfiguration);
+  const { endpoint, safeAddress, format } = Object.assign(
+    {},
+    configuration,
+    customConfiguration
+  );
+
   configuration.endpoint = endpoint;
   configuration.safeAddress = safeAddress;
   configuration.format = format;
@@ -26,37 +29,6 @@ function setConfiguration(customConfiguration) {
 
 require('cross-fetch/polyfill');
 const pkg = require('./package.json');
-
-// Utility methods to store tabular data
-
-function convertToCsv(data) {
-  return new Promise((resolve, reject) => {
-    stringify(
-      data,
-      {
-        header: true,
-        quoted: true,
-      },
-      (error, output) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(output);
-        }
-      }
-    );
-  });
-}
-
-function convertToJson(data) {
-  return new Promise((resolve, reject) => {
-    try {
-      resolve(JSON.stringify(data));
-    } catch {
-      reject(new Error('Invalid JSON'));
-    }
-  });
-}
 
 // Utility methods to display results
 
@@ -154,8 +126,6 @@ const count = (arr) => {
 };
 
 const pick = (arr, key) => arr.map((item) => item[key]);
-
-const pickInt = (arr, key) => arr.map((item) => parseInt(item[key]));
 
 // The actual analysis commands
 
@@ -362,7 +332,7 @@ const analyses = {
 
       // Sort dates and add index
       const velocity = Object.keys(data)
-        .map((date, index) => {
+        .map((date) => {
           return {
             amount: data[date].toString(10),
             date,
@@ -392,7 +362,42 @@ const analyses = {
 // Main method executing the analysis command
 
 if (require.main === module) {
-  async function main() {
+  const fs = require('fs');
+  const stringify = require('csv-stringify');
+  const { program } = require('commander');
+
+  // Utility methods to store tabular data
+
+  const convertToCsv = (data) => {
+    return new Promise((resolve, reject) => {
+      stringify(
+        data,
+        {
+          header: true,
+          quoted: true,
+        },
+        (error, output) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(output);
+          }
+        }
+      );
+    });
+  };
+
+  const convertToJson = (data) => {
+    return new Promise((resolve, reject) => {
+      try {
+        resolve(JSON.stringify(data));
+      } catch {
+        reject(new Error('Invalid JSON'));
+      }
+    });
+  };
+
+  const main = async () => {
     let result;
 
     Object.keys(analyses).forEach((name) => {
@@ -454,7 +459,7 @@ if (require.main === module) {
         process.exit(1);
       }
     }
-  }
+  };
 
   program
     .version(pkg.version)
