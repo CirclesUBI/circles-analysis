@@ -496,4 +496,12 @@ module.exports = {
     return acc;
   }, {}),
   setConfiguration,
+  utils: {
+    avg,
+    avgBN,
+    count,
+    maxBN,
+    pick,
+    weiToCircles,
+  },
 };
