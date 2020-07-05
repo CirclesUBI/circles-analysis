@@ -17,28 +17,15 @@ const configuration = {
   format: 'csv',
 };
 
+function setConfiguration(customConfiguration) {
+  const { endpoint, safeAddress, format } = Object.assign({}, configuration, customConfiguration);
+  configuration.endpoint = endpoint;
+  configuration.safeAddress = safeAddress;
+  configuration.format = format;
+}
+
 require('cross-fetch/polyfill');
 const pkg = require('./package.json');
-
-program
-  .version(pkg.version)
-  .description(pkg.description)
-  .option(
-    '-e, --endpoint <url>',
-    'graphQL subgraph endpoint',
-    configuration.endpoint
-  )
-  .option(
-    '-f, --format <csv|json>',
-    'file format of output file',
-    configuration.format
-  )
-  .option('-o, --output <path>', 'optional file output for tabular data')
-  .option(
-    '-s, --safe_address <str>',
-    'contract address of relayer safe',
-    configuration.safeAddress
-  );
 
 // Utility methods to store tabular data
 
@@ -74,6 +61,10 @@ function convertToJson(data) {
 // Utility methods to display results
 
 function print(title, value) {
+  if (require.main !== module) {
+    return;
+  }
+
   console.log(`◆ ${chalk.blue(title)}: ${value}`);
 }
 
@@ -400,68 +391,102 @@ const analyses = {
 
 // Main method executing the analysis command
 
-async function main() {
-  let result;
+if (require.main === module) {
+  async function main() {
+    let result;
 
-  Object.keys(analyses).forEach((name) => {
-    program
-      .command(name)
-      .description(analyses[name].description)
-      .action(async (options) => {
-        console.log(
-          chalk.bold(`Analyse "${name}" (${analyses[name].description}):`)
-        );
+    Object.keys(analyses).forEach((name) => {
+      program
+        .command(name)
+        .description(analyses[name].description)
+        .action(async (options) => {
+          console.log(
+            chalk.bold(`Analyse "${name}" (${analyses[name].description}):`)
+          );
 
-        // Set configuration
-        configuration.endpoint = options.parent.endpoint;
-        configuration.format = options.parent.format;
-        configuration.safeAddress = options.parent.safe_address;
+          // Set configuration
+          setConfiguration({
+            endpoint: options.parent.endpoint,
+            format: options.parent.format,
+            safeAddress: options.parent.safe_address,
+          });
 
-        // Execute command!
-        try {
-          result = await analyses[name].command(options);
-        } catch (error) {
-          console.error(chalk.red(error));
-          process.exit(1);
-        }
-      });
-  });
+          // Execute command!
+          try {
+            result = await analyses[name].command(options);
+          } catch (error) {
+            console.error(chalk.red(error));
+            process.exit(1);
+          }
+        });
+    });
 
-  await program.parseAsync(process.argv);
+    await program.parseAsync(process.argv);
 
-  if (!result) {
-    console.error(chalk.red('Error: Invalid result!'));
-    process.exit(1);
-  }
-
-  console.log(`Done processing ${result.length} data entries total!`);
-
-  if (program.output) {
-    try {
-      let fileContent;
-
-      if (configuration.format === 'csv') {
-        fileContent = await convertToCsv(result);
-      } else if (configuration.format === 'json') {
-        fileContent = await convertToJson(result);
-      } else {
-        throw new Error('Invalid export format');
-      }
-
-      fs.writeFile(program.output, fileContent, (error) => {
-        if (error) {
-          throw error;
-        }
-
-        console.log(`Stored results in ${program.output}`);
-      });
-    } catch (error) {
-      console.error(chalk.red(error));
+    if (!result) {
+      console.error(chalk.red('Error: Invalid result!'));
       process.exit(1);
     }
-  }
-}
 
-if (require.main === module) {
+    console.log(`Done processing ${result.length} data entries total!`);
+
+    if (program.output) {
+      try {
+        let fileContent;
+
+        if (configuration.format === 'csv') {
+          fileContent = await convertToCsv(result);
+        } else if (configuration.format === 'json') {
+          fileContent = await convertToJson(result);
+        } else {
+          throw new Error('Invalid export format');
+        }
+
+        fs.writeFile(program.output, fileContent, (error) => {
+          if (error) {
+            throw error;
+          }
+
+          console.log(`Stored results in ${program.output}`);
+        });
+      } catch (error) {
+        console.error(chalk.red(error));
+        process.exit(1);
+      }
+    }
+  }
+
+  program
+    .version(pkg.version)
+    .description(pkg.description)
+    .option(
+      '-e, --endpoint <url>',
+      'graphQL subgraph endpoint',
+      configuration.endpoint
+    )
+    .option(
+      '-f, --format <csv|json>',
+      'file format of output file',
+      configuration.format
+    )
+    .option('-o, --output <path>', 'optional file output for tabular data')
+    .option(
+      '-s, --safe_address <str>',
+      'contract address of relayer safe',
+      configuration.safeAddress
+    );
+
   main();
 }
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+module.exports = {
+  ...Object.keys(analyses).reduce((acc, key) => {
+    acc[`get${capitalizeFirstLetter(key)}`] = analyses[key].command;
+    return acc;
+  }, {}),
+  setConfiguration,
+};

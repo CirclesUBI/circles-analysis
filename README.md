@@ -63,6 +63,16 @@ npm install
 
 // Run commands like ..
 node ./index.js --output results.csv velocity
+
+// Import methods like ..
+import analysis from '@circles/analysis';
+
+analysis.setConfiguration({
+ safeAddress: '...',
+ endpoint: '...',
+});
+
+const velocity = await analysis.getVelocity();
 ```
 
 ## License
