@@ -62,7 +62,7 @@ Commands:
 npm install
 
 // Run commands like ..
-./circles-analysis --output results.csv velocity
+node ./index.js --output results.csv velocity
 ```
 
 ## License

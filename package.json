@@ -2,7 +2,7 @@
   "name": "@circles/analysis",
   "version": "0.1.0",
   "description": "Circles statistics and analytics toolkit",
-  "main": "./circles-analysis",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CirclesUBI/circles-analysis.git"
@@ -13,12 +13,12 @@
   },
   "homepage": "https://github.com/CirclesUBI/circles-analysis#readme",
   "scripts": {
-    "start": "./circles-analysis",
-    "lint": "prettier --check ./circles-analysis",
-    "lint:fix": "prettier --write ./circles-analysis"
+    "start": "node ./index.js",
+    "lint": "prettier --check ./index.js",
+    "lint:fix": "prettier --write ./index.js"
   },
   "bin": {
-    "circles-analysis": "circles-analysis"
+    "circles-analysis": "./index.js"
   },
   "dependencies": {
     "bn.js": "^5.1.2",

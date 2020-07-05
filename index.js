@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const BN = require('bn.js');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -464,4 +462,6 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
