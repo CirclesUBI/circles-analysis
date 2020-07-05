@@ -1,4 +1,6 @@
+#!/usr/bin/env node
 /* eslint-disable no-console */
+
 const BN = require('bn.js');
 const chalk = require('chalk');
 const web3 = require('web3');
