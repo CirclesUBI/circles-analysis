@@ -1,6 +1,6 @@
 {
   "name": "@circles/analysis",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Circles statistics and analytics toolkit",
   "main": "lib.js",
   "repository": {
