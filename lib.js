@@ -81,7 +81,9 @@ async function fetchAllFromGraph(name, fields, extra = '') {
   let result = [];
   let index = 0;
 
-  console.log(`Request all "${name}" data from Graph ...`);
+  if (require.main === module) {
+    console.log(`Request all "${name}" data from Graph ...`);
+  }
 
   for await (let data of fetchGraphGenerator(name, fields, extra)) {
     result = result.concat(
