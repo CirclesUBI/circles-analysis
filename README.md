@@ -38,12 +38,12 @@ Usage: circles-analysis [options] [command]
 Circles statistics and analysis toolkit
 
 Options:
-  -V, --version             output the version number
-  -e, --endpoint <url>      graphQL subgraph endpoint (default: circles server)
-  -f, --format <csv|json>   file format of output file (default: "csv")
-  -o, --output <path>       optional file output for tabular data
-  -s, --safe_address <str>  contract address of relayer safe (default: circles contract)
-  -h, --help                display help for command
+  -V, --version                output the version number
+  -e, --endpoint <url>         graphQL subgraph endpoint (default: "https://api.thegraph.com/..")
+  -f, --format <csv|json>      file format of output file (default: "csv")
+  -o, --output <path>          optional file output for tabular data
+  -s, --relayer_address <str>  address of relayer funder (default: "0x0739..")
+  -h, --help                   display help for command
 
 Commands:
   transitive                transitive transactions in the Circles hub

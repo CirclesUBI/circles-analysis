@@ -1,42 +1,47 @@
-/* eslint-disable no-console */
-
 const BN = require('bn.js');
 const web3 = require('web3');
 const { Interval, DateTime } = require('luxon');
 const { request } = require('graphql-request');
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-const PAGINATION_SIZE = 500;
+const PAGINATION_SIZE = 1000;
 
 const configuration = {
   endpoint:
     'https://graph.circles.garden/subgraphs/name/CirclesUBI/circles-subgraph',
-  safeAddress: '0x812d4e73eb6b8200a62469ec3249fb02eac58c91',
+  relayerAddress: '0x0739a8D036c966aC9161Ea14855CE0f94C15B87b',
   format: 'csv',
+  log: undefined,
 };
 
 function setConfiguration(customConfiguration) {
-  const { endpoint, safeAddress, format } = Object.assign(
-    {},
+  const { endpoint, relayerAddress, format, log } = Object.keys(
     configuration,
-    customConfiguration,
-  );
+  ).reduce((acc, key) => {
+    if (customConfiguration[key]) {
+      acc[key] = customConfiguration[key];
+    } else {
+      acc[key] = configuration[key];
+    }
+    return acc;
+  }, {});
 
   configuration.endpoint = endpoint;
-  configuration.safeAddress = safeAddress;
+  configuration.relayerAddress = relayerAddress;
   configuration.format = format;
+  configuration.log = log;
 }
 
 require('cross-fetch/polyfill');
 
 // Utility methods to display results
 
-function print(title, value) {
-  if (require.main !== module) {
+function print(message) {
+  if (!configuration.log) {
     return;
   }
 
-  console.log(`◆ ${chalk.blue(title)}: ${value}`);
+  configuration.log(message);
 }
 
 function weiToCircles(wei) {
@@ -68,11 +73,17 @@ async function fetchFromGraph(
 async function* fetchGraphGenerator(name, fields, extra = '') {
   let skip = 0;
   let hasData = true;
+  const pageSize = PAGINATION_SIZE;
 
   while (hasData) {
-    const data = await fetchFromGraph(name, fields, extra, skip);
+    const data = await fetchFromGraph(name, fields, extra, skip, pageSize);
+    print(
+      `Fetched ${data.length} entries for "${name}" from Graph (${skip} - ${
+        skip + pageSize
+      }})...`,
+    );
     hasData = data.length > 0;
-    skip += PAGINATION_SIZE;
+    skip += pageSize;
     yield data;
   }
 }
@@ -80,10 +91,9 @@ async function* fetchGraphGenerator(name, fields, extra = '') {
 async function fetchAllFromGraph(name, fields, extra = '') {
   let result = [];
   let index = 0;
+  let test = 0;
 
-  if (require.main === module) {
-    console.log(`Request all "${name}" data from Graph ...`);
-  }
+  print(`Request all "${name}" data from Graph ...`);
 
   for await (let data of fetchGraphGenerator(name, fields, extra)) {
     result = result.concat(
@@ -134,10 +144,21 @@ const analyses = {
   transitive: {
     description: 'transitive transactions in the Circles hub',
     command: async () => {
-      const hubTransfers = await fetchAllFromGraph(
-        'hubTransfers',
-        'id from to amount',
+      const notifications = await fetchAllFromGraph(
+        'notifications',
+        'time hubTransfer { id from to amount }',
+        'where: { type: HUB_TRANSFER }',
       );
+
+      const hubTransfers = notifications.map(({ hubTransfer, time }) => {
+        return {
+          amount: hubTransfer.amount,
+          from: hubTransfer.from,
+          to: hubTransfer.to,
+          id: hubTransfer.id,
+          time,
+        };
+      });
 
       print(
         'Average amount',
@@ -169,7 +190,7 @@ const analyses = {
       });
 
       const gasFees = transfers.filter((item) => {
-        return item.to === configuration.safeAddress;
+        return item.to === configuration.relayerAddress;
       });
 
       const gasFeesSum = gasFees.reduce((acc, item) => {
@@ -191,10 +212,21 @@ const analyses = {
   trusts: {
     description: 'trust connection events',
     command: async () => {
-      const trusts = await fetchAllFromGraph(
-        'trusts',
-        'id canSendToAddress userAddress limit limitPercentage',
+      const notifications = await fetchAllFromGraph(
+        'notifications',
+        'time trust { id canSendToAddress userAddress limitPercentage }',
+        'where: { type: TRUST }',
       );
+
+      const trusts = notifications.map(({ trust, time }) => {
+        return {
+          canSendToAddress: trust.canSendToAddress,
+          userAddress: trust.userAddress,
+          limitPercentage: trust.limitPercentage,
+          id: trust.id,
+          time,
+        };
+      });
 
       const revokedTrusts = trusts.filter((item) => {
         return item.limitPercentage === '0';
