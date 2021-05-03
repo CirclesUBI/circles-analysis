@@ -61,16 +61,16 @@ async function main() {
     )
     .option('-o, --output <path>', 'optional file output for tabular data')
     .option(
-      '-s, --safe_address <str>',
-      'contract address of relayer safe',
-      configuration.safeAddress,
+      '-s, --relayer_address <str>',
+      'address of relayer funder',
+      configuration.relayerAddress,
     );
 
   Object.keys(analyses).forEach((name) => {
     program
       .command(name)
       .description(analyses[name].description)
-      .action(async (options) => {
+      .action(async (_, options, commands) => {
         console.log(
           chalk.bold(`Analyse "${name}" (${analyses[name].description}):`),
         );
@@ -79,7 +79,8 @@ async function main() {
         lib.setConfiguration({
           endpoint: options.parent.endpoint,
           format: options.parent.format,
-          safeAddress: options.parent.safe_address,
+          relayerAddress: options.parent.relayer_address,
+          log: console.log,
         });
 
         // Execute command!
