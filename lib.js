@@ -41,7 +41,7 @@ function print(message) {
     return;
   }
 
-  configuration.log(message);
+  configuration.log(...arguments);
 }
 
 function weiToCircles(wei) {
@@ -214,14 +214,14 @@ const analyses = {
     command: async () => {
       const notifications = await fetchAllFromGraph(
         'notifications',
-        'time trust { id canSendToAddress userAddress limitPercentage }',
+        'time trust { id canSendTo user limitPercentage }',
         'where: { type: TRUST }',
       );
 
       const trusts = notifications.map(({ trust, time }) => {
         return {
-          canSendToAddress: trust.canSendToAddress,
-          userAddress: trust.userAddress,
+          canSendToAddress: trust.canSendTo,
+          userAddress: trust.user,
           limitPercentage: trust.limitPercentage,
           id: trust.id,
           time,
