@@ -13,6 +13,10 @@
 <br />
 
 <div align="center">
+  <!-- npm -->
+  <a href="https://www.npmjs.com/package/@circles/analysis">
+    <img src="https://img.shields.io/npm/v/@circles/analysis?style=flat-square&color=%23f14d48" height="18">
+  </a>
   <!-- Licence -->
   <a href="https://github.com/CirclesUBI/circles-analysis/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/CirclesUBI/circles-analysis?style=flat-square&color=%23cc1e66" alt="License" height="18">
