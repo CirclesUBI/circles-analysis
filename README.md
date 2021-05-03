@@ -26,7 +26,7 @@ Stored results in example.csv
 
 ## Installation
 
-```
+```bash
 npm i -g @circles/analysis
 ```
 
@@ -57,13 +57,15 @@ Commands:
 
 ## Development
 
-```
-// Install dependencies
+```bash
+# Install dependencies
 npm install
 
-// Run commands like ..
+# Run commands like ..
 node ./index.js --output results.csv velocity
+```
 
+```javascript
 // Import methods like ..
 import analysis from '@circles/analysis';
 
