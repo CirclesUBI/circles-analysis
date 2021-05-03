@@ -43,7 +43,11 @@
   </h3>
 </div>
 
-Analysis and statistics toolkit for [`Circles`](https://joincircles.net/), displaying basic metrics and exporting tabular data for further analysis in .csv or .json format.
+<br/>
+
+Analysis and statistics toolkit for [`Circles`], displaying basic metrics and exporting tabular data for further analysis in .csv or .json format.
+
+[`circles`]: https://joincircles.net
 
 ## Example
 
@@ -113,4 +117,6 @@ const velocity = await analysis.getVelocity();
 
 ## License
 
-GNU Affero General Public License v3.0 `AGPL-3.0`
+GNU Affero General Public License v3.0 [`AGPL-3.0`]
+
+[`AGPL-3.0`]: LICENSE
