@@ -47,6 +47,7 @@ async function main() {
   let result;
 
   program
+    .storeOptionsAsProperties()
     .version(pkg.version)
     .description(pkg.description)
     .option(
