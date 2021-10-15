@@ -8,7 +8,7 @@ const PAGINATION_SIZE = 1000;
 
 const configuration = {
   endpoint:
-    'https://graph.circles.garden/subgraphs/name/CirclesUBI/circles-subgraph',
+    'https://api.thegraph.com/subgraphs/name/circlesubi/circles',
   relayerAddress: '0x0739a8D036c966aC9161Ea14855CE0f94C15B87b',
   format: 'csv',
   log: undefined,
@@ -96,14 +96,16 @@ async function fetchAllFromGraph(name, fields, extra = '') {
   print(`Request all "${name}" data from Graph ...`);
 
   for await (let data of fetchGraphGenerator(name, fields, extra)) {
-    result = result.concat(
-      data.map((entry) => {
-        entry.index = ++index;
-        return entry;
-      }),
-    );
+    if (data.length > 0){
+      result = result.concat(
+        data.map((entry) => {
+          entry.index = ++index;
+          return entry;
+        }),
+      );
+    }
+      
   }
-
   return result;
 }
 
@@ -315,6 +317,32 @@ const analyses = {
         };
       });
 
+      return safesFormatted;
+    },
+  },
+  walletDeployedSafes: {
+    description: 'safe deployments that are shared wallets',
+    command: async () => {
+      const safes = await fetchAllFromGraph('safes', 'id', 'where: {deployed: true, organization: true}');
+      print('Deployed Safes that are Shared Wallets', safes.length);
+      const safesFormatted = safes.map((safe, index) => {
+        return {
+          index: index + 1,
+        };
+      });
+      return safesFormatted;
+    },
+  },
+  userDeployedSafes:{
+    description: 'safe deployments that are not shared wallets',
+    command: async () => {
+      const safes = await fetchAllFromGraph('safes', 'id', 'where: {deployed: true, organization: false}');
+      print('Deployed Safes that are Individual accounts', safes.length);
+      const safesFormatted = safes.map((safe, index) => {
+        return {
+          index: index + 1,
+        };
+      });
       return safesFormatted;
     },
   },
