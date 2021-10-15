@@ -53,12 +53,12 @@ function weiToCircles(wei) {
 async function fetchFromGraph(
   name,
   fields,
-  extra = '',
-  skip = 0,
+  where = '',
+  lastID = '',
   first = PAGINATION_SIZE,
 ) {
   const query = `{
-    ${name}(${extra} first: ${first}, skip: ${skip}) {
+    ${name}(first: ${first}, orderBy: id, where: {id_gt: "${lastID}", ${where}}) {
       ${fields}
     }
   }`;
@@ -70,32 +70,38 @@ async function fetchFromGraph(
   return data[name];
 }
 
-async function* fetchGraphGenerator(name, fields, extra = '') {
-  let skip = 0;
+async function* fetchGraphGenerator(name, fields, where = '') {
+  // The `skip` argument must be between 0 and 5000 (current limitations by TheGraph).
+  // Therefore, we sort the elements by id and reference the last element id for the next query
+  let lastID = '';
   let hasData = true;
   const pageSize = PAGINATION_SIZE;
+  let skip = 0;
 
   while (hasData) {
-    const data = await fetchFromGraph(name, fields, extra, skip, pageSize);
+    const data = await fetchFromGraph(name, fields, where, lastID, pageSize);
     print(
       `Fetched ${data.length} entries for "${name}" from Graph (${skip} - ${
         skip + pageSize
       }})...`,
     );
     hasData = data.length > 0;
-    skip += pageSize;
+    if (hasData) 
+      lastID = data[data.length - 1].id;
+    
+    skip += PAGINATION_SIZE;
     yield data;
   }
 }
 
-async function fetchAllFromGraph(name, fields, extra = '') {
+async function fetchAllFromGraph(name, fields, where = '') {
   let result = [];
   let index = 0;
   let test = 0;
 
   print(`Request all "${name}" data from Graph ...`);
 
-  for await (let data of fetchGraphGenerator(name, fields, extra)) {
+  for await (let data of fetchGraphGenerator(name, fields, where)) {
     if (data.length > 0){
       result = result.concat(
         data.map((entry) => {
@@ -149,7 +155,7 @@ const analyses = {
       const notifications = await fetchAllFromGraph(
         'notifications',
         'time hubTransfer { id from to amount }',
-        'where: { type: HUB_TRANSFER }',
+        'type: HUB_TRANSFER',
       );
 
       const hubTransfers = notifications.map(({ hubTransfer, time }) => {
@@ -217,7 +223,7 @@ const analyses = {
       const notifications = await fetchAllFromGraph(
         'notifications',
         'time trust { id canSendTo user limitPercentage }',
-        'where: { type: TRUST }',
+        'type: TRUST',
       );
 
       const trusts = notifications.map(({ trust, time }) => {
@@ -323,7 +329,7 @@ const analyses = {
   walletDeployedSafes: {
     description: 'safe deployments that are shared wallets',
     command: async () => {
-      const safes = await fetchAllFromGraph('safes', 'id', 'where: {deployed: true, organization: true}');
+      const safes = await fetchAllFromGraph('safes', 'id', 'deployed: true, organization: true');
       print('Deployed Safes that are Shared Wallets', safes.length);
       const safesFormatted = safes.map((safe, index) => {
         return {
@@ -336,7 +342,7 @@ const analyses = {
   userDeployedSafes:{
     description: 'safe deployments that are not shared wallets',
     command: async () => {
-      const safes = await fetchAllFromGraph('safes', 'id', 'where: {deployed: true, organization: false}');
+      const safes = await fetchAllFromGraph('safes', 'id', 'deployed: true, organization: false');
       print('Deployed Safes that are Individual accounts', safes.length);
       const safesFormatted = safes.map((safe, index) => {
         return {
@@ -352,7 +358,7 @@ const analyses = {
       const notifications = await fetchAllFromGraph(
         'notifications',
         'id time hubTransfer { id from to amount }',
-        'where: { type: HUB_TRANSFER }',
+        'type: HUB_TRANSFER',
       );
 
       const data = {};
