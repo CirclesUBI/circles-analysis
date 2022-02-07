@@ -62,7 +62,7 @@ async function fetchFromGraph(
       ${fields}
     }
   }`;
-
+  console.log(query.replace(/\s\s+/g, ' '));
   const data = await request(
     configuration.endpoint,
     query.replace(/\s\s+/g, ' '),
@@ -86,9 +86,9 @@ async function* fetchGraphGenerator(name, fields, where = '') {
       }})...`,
     );
     hasData = data.length > 0;
-    if (hasData) 
+    if (hasData) {
       lastID = data[data.length - 1].id;
-    
+    }
     skip += PAGINATION_SIZE;
     yield data;
   }
@@ -154,7 +154,7 @@ const analyses = {
     command: async () => {
       const notifications = await fetchAllFromGraph(
         'notifications',
-        'time hubTransfer { id from to amount }',
+        'id time hubTransfer { id from to amount }',
         'type: HUB_TRANSFER',
       );
 
@@ -222,7 +222,7 @@ const analyses = {
     command: async () => {
       const notifications = await fetchAllFromGraph(
         'notifications',
-        'time trust { id canSendTo user limitPercentage }',
+        'id time trust { id canSendTo user limitPercentage }',
         'type: TRUST',
       );
 
