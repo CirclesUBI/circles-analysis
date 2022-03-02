@@ -8,7 +8,7 @@ const PAGINATION_SIZE = 1000;
 
 const configuration = {
   endpoint:
-    'https://api.thegraph.com/subgraphs/name/circlesubi/circles',
+    'https://api.thegraph.com/subgraphs/name/azf20/circles-ubi',
   relayerAddress: '0x0739a8D036c966aC9161Ea14855CE0f94C15B87b',
   format: 'csv',
   log: undefined,
