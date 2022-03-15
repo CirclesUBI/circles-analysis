@@ -89,7 +89,7 @@ Options:
 
 Commands:
   transitive                transitive transactions in the Circles hub
-  transfers                 regular transfer transactions including ubi payouts and gas fees
+  transfers                 regular transfer transactions including: transfer steps, ubi payouts, and gas fees
   trusts                    trust connection events
   ownerships                safe ownership events / device changes
   safes                     safe deployments and balances
