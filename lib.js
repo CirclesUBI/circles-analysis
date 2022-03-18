@@ -244,24 +244,27 @@ const analyses = {
         return item.limitPercentage !== '0';
       });
 
+      const outgoingTrustConnections = count(createdTrusts).canSendToAddress;
+      const incomingTrustConnections = count(createdTrusts).userAddress;
+
       print('Created trust connections', createdTrusts.length);
       print('Revoked trust connections', revokedTrusts.length);
       print(
         'Average outgoing trust connections',
-        avg(Object.values(count(createdTrusts).canSendToAddress)),
+        avg(Object.values(outgoingTrustConnections)),
       );
       print(
         'Average incoming trust connections',
-        avg(Object.values(count(createdTrusts).userAddress)),
+        avg(Object.values(incomingTrustConnections)),
       );
-      print(
-        'Max outgoing trust connections',
-        Math.max(...Object.values(count(createdTrusts).userAddress)),
-      );
-      print(
-        'Max incoming trust connections',
-        Math.max(...Object.values(count(createdTrusts).canSendToAddress)),
-      );
+      // print(
+      //   'Max outgoing trust connections',
+      //   Math.max(...Object.values(incomingTrustConnections)),
+      // );
+      // print(
+      //   'Max incoming trust connections',
+      //   Math.max(...Object.values(outgoingTrustConnections)),
+      // );
 
       return trusts;
     },
