@@ -247,14 +247,14 @@ const analyses = {
       const outgoingTrustConnections = count(createdTrusts).canSendToAddress;
       const incomingTrustConnections = count(createdTrusts).userAddress;
 
-      print('Created trust connections', createdTrusts.length);
-      print('Revoked trust connections', revokedTrusts.length);
+      print('Created trust connections:', createdTrusts.length);
+      print('Revoked trust connections:', revokedTrusts.length);
       print(
-        'Average outgoing trust connections',
+        'Average outgoing trust connections:',
         avg(Object.values(outgoingTrustConnections)),
       );
       print(
-        'Average incoming trust connections',
+        'Average incoming trust connections:',
         avg(Object.values(incomingTrustConnections)),
       );
       // print(
