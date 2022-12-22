@@ -184,6 +184,41 @@ const analyses = {
       return hubTransfers;
     },
   },
+  timetransfers: {
+    description: 'regular transfer transactions including ubi payouts and gas fees with timestamp',
+    command: async () => {
+      const notifications = await fetchAllFromGraph(
+        'notifications',
+        'id time transfer { id from to amount }',
+        'type: TRANSFER',
+      );
+
+      const transfers = notifications.map(({ transfer, time }) => {
+        return {
+          amount: transfer.amount,
+          from: transfer.from,
+          to: transfer.to,
+          id: transfer.id,
+          time,
+        };
+      });
+
+      print(
+        'Average amount',
+        weiToCircles(avgBN(pick(transfers, 'amount'))),
+      );
+      print(
+        'Average total received transfers per user',
+        avg(Object.values(count(transfers).from)),
+      );
+      print(
+        'Max total received transfers per user',
+        Math.max(...Object.values(count(transfers).to)),
+      );
+
+      return transfers;
+    },
+  },
   transfers: {
     description:
       'regular transfer transactions including ubi payouts and gas fees',
