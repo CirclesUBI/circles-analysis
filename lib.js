@@ -184,7 +184,7 @@ const analyses = {
       return hubTransfers;
     },
   },
-  timetransfers: {
+  transfersWithTimestamp: {
     description: 'regular transfer transactions including ubi payouts and gas fees with timestamp',
     command: async () => {
       const notifications = await fetchAllFromGraph(
@@ -203,18 +203,29 @@ const analyses = {
         };
       });
 
+      const ubiPayouts = transfers.filter((item) => {
+        return item.from === ZERO_ADDRESS;
+      });
+
+      const gasFees = transfers.filter((item) => {
+        return item.to === configuration.relayerAddress;
+      });
+
+      const gasFeesSum = gasFees.reduce((acc, item) => {
+        return acc.add(new BN(item.amount));
+      }, new BN());
+
       print(
         'Average amount',
         weiToCircles(avgBN(pick(transfers, 'amount'))),
       );
       print(
-        'Average total received transfers per user',
-        avg(Object.values(count(transfers).from)),
+        'Average UBI payout amount',
+        weiToCircles(avgBN(pick(ubiPayouts, 'amount'))),
       );
-      print(
-        'Max total received transfers per user',
-        Math.max(...Object.values(count(transfers).to)),
-      );
+      print('UBI payouts count', ubiPayouts.length);
+      print('Total gas fees amount (in wei)', gasFeesSum);
+      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')));
 
       return transfers;
     },
