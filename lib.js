@@ -9,13 +9,13 @@ const PAGINATION_SIZE = 1000;
 const configuration = {
   endpoint:
     'https://api.thegraph.com/subgraphs/name/circlesubi/circles-ubi',
-  relayerAddress: '0x0739a8D036c966aC9161Ea14855CE0f94C15B87b',
+  relayerAddresses: ['0x0739a8d036c966ac9161ea14855ce0f94c15b87b', '0x9944ce8e27ce1f16c4003f108b1c09e5ae011ba0'],
   format: 'csv',
   log: undefined,
 };
 
 function setConfiguration(customConfiguration) {
-  const { endpoint, relayerAddress, format, log } = Object.keys(
+  const { endpoint, relayerAddresses, format, log } = Object.keys(
     configuration,
   ).reduce((acc, key) => {
     if (customConfiguration[key]) {
@@ -27,7 +27,7 @@ function setConfiguration(customConfiguration) {
   }, {});
 
   configuration.endpoint = endpoint;
-  configuration.relayerAddress = relayerAddress;
+  configuration.relayerAddresses = relayerAddresses;
   configuration.format = format;
   configuration.log = log;
 }
@@ -184,6 +184,52 @@ const analyses = {
       return hubTransfers;
     },
   },
+  transfersWithTimestamp: {
+    description: 'regular transfer transactions including ubi payouts and gas fees with timestamp',
+    command: async () => {
+      const notifications = await fetchAllFromGraph(
+        'notifications',
+        'id time transfer { id from to amount }',
+        'type: TRANSFER',
+      );
+
+      const transfers = notifications.map(({ transfer, time }) => {
+        return {
+          amount: transfer.amount,
+          from: transfer.from,
+          to: transfer.to,
+          id: transfer.id,
+          time,
+        };
+      });
+
+      const ubiPayouts = transfers.filter((item) => {
+        return item.from === ZERO_ADDRESS;
+      });
+
+      const gasFees = transfers.filter((item) => {
+        return configuration.relayerAddresses.includes(item.to);
+      });
+
+      const gasFeesSum = gasFees.reduce((acc, item) => {
+        return acc.add(new BN(item.amount));
+      }, new BN());
+
+      print(
+        'Average amount',
+        weiToCircles(avgBN(pick(transfers, 'amount'))),
+      );
+      print(
+        'Average UBI payout amount',
+        weiToCircles(avgBN(pick(ubiPayouts, 'amount'))),
+      );
+      print('UBI payouts count', ubiPayouts.length);
+      print('Total gas fees amount (in wei)', gasFeesSum);
+      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')));
+
+      return transfers;
+    },
+  },
   transfers: {
     description:
       'regular transfer transactions including ubi payouts and gas fees',
@@ -198,7 +244,7 @@ const analyses = {
       });
 
       const gasFees = transfers.filter((item) => {
-        return item.to === configuration.relayerAddress;
+        return configuration.relayerAddresses.includes(item.to);
       });
 
       const gasFeesSum = gasFees.reduce((acc, item) => {
