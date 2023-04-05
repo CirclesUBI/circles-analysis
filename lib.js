@@ -224,8 +224,8 @@ const analyses = {
         weiToCircles(avgBN(pick(ubiPayouts, 'amount'))),
       );
       print('UBI payouts count', ubiPayouts.length);
-      print('Total gas fees amount (in wei)', gasFeesSum);
-      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')));
+      print('Total gas fees amount (in wei)', gasFeesSum.toString());
+      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')).toString());
 
       return transfers;
     },
@@ -257,8 +257,8 @@ const analyses = {
         weiToCircles(avgBN(pick(ubiPayouts, 'amount'))),
       );
       print('UBI payouts count', ubiPayouts.length);
-      print('Total gas fees amount (in wei)', gasFeesSum);
-      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')));
+      print('Total gas fees amount (in wei)', gasFeesSum.toString());
+      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')).toString());
 
       return transfers;
     },
