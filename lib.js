@@ -79,18 +79,22 @@ async function* fetchGraphGenerator(name, fields, where = '') {
   let skip = 0;
 
   while (hasData) {
-    const data = await fetchFromGraph(name, fields, where, lastID, pageSize);
-    print(
-      `Fetched ${data.length} entries for "${name}" from Graph (${skip} - ${
-        skip + pageSize
-      }})...`,
-    );
-    hasData = data.length > 0;
-    if (hasData) {
-      lastID = data[data.length - 1].id;
-    }
-    skip += PAGINATION_SIZE;
-    yield data;
+    try {
+      const data = await fetchFromGraph(name, fields, where, lastID, pageSize);
+      print(
+        `Fetched ${data.length} entries for "${name}" from Graph (${skip} - ${skip + pageSize
+        }})...`,
+      );
+      hasData = data.length > 0;
+      if (hasData) {
+        lastID = data[data.length - 1].id;
+      }
+      skip += PAGINATION_SIZE;
+      yield data;
+    } catch (e) {
+      print(`Error: ${e.message} when retrieving (${skip} - ${skip + pageSize}})`);
+      continue;
+    };
   }
 }
 
@@ -102,7 +106,7 @@ async function fetchAllFromGraph(name, fields, where = '') {
   print(`Request all "${name}" data from Graph ...`);
 
   for await (let data of fetchGraphGenerator(name, fields, where)) {
-    if (data.length > 0){
+    if (data.length > 0) {
       result = result.concat(
         data.map((entry) => {
           entry.index = ++index;
@@ -110,7 +114,7 @@ async function fetchAllFromGraph(name, fields, where = '') {
         }),
       );
     }
-      
+
   }
   return result;
 }
@@ -224,8 +228,8 @@ const analyses = {
         weiToCircles(avgBN(pick(ubiPayouts, 'amount'))),
       );
       print('UBI payouts count', ubiPayouts.length);
-      print('Total gas fees amount (in wei)', gasFeesSum);
-      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')));
+      print('Total gas fees amount (in wei)', gasFeesSum.toString());
+      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')).toString());
 
       return transfers;
     },
@@ -257,8 +261,8 @@ const analyses = {
         weiToCircles(avgBN(pick(ubiPayouts, 'amount'))),
       );
       print('UBI payouts count', ubiPayouts.length);
-      print('Total gas fees amount (in wei)', gasFeesSum);
-      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')));
+      print('Total gas fees amount (in wei)', gasFeesSum.toString());
+      print('Average gas fees amount (in wei)', avgBN(pick(gasFees, 'amount')).toString());
 
       return transfers;
     },
@@ -388,7 +392,7 @@ const analyses = {
       return safesFormatted;
     },
   },
-  userDeployedSafes:{
+  userDeployedSafes: {
     description: 'safe deployments that are not shared wallets',
     command: async () => {
       const safes = await fetchAllFromGraph('safes', 'id', 'deployed: true, organization: false');

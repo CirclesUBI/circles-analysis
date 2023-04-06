@@ -11,12 +11,12 @@ const pkg = require('./package.json');
 
 // Utility methods to store tabular data
 
-const convertToCsv = (data) => {
+const convertToCsv = (data, header) => {
   return new Promise((resolve, reject) => {
     stringify(
       data,
       {
-        header: true,
+        header: header != null ? header : true,
         quoted: true,
       },
       (error, output) => {
@@ -104,24 +104,29 @@ async function main() {
   console.log(`Done processing ${result.length} data entries total!`);
 
   if (program.output) {
-    try {
-      let fileContent;
-
-      if (configuration.format === 'csv') {
-        fileContent = await convertToCsv(result);
-      } else if (configuration.format === 'json') {
-        fileContent = await convertToJson(result);
+    fs.unlink(program.output, (err) => {
+      if (err) {
+        console.log(`File ${program.output} didn't exist.`);
       } else {
-        throw new Error('Invalid export format');
+        console.log(`File ${program.output} was deleted.`);
       }
+    });
+    let writeHeader = true;
+    try {
+      const pagination = 1000;
+      const convertFunc = configuration.format === 'json' ? convertToJson : convertToCsv;
 
-      fs.writeFile(program.output, fileContent, (error) => {
-        if (error) {
-          throw error;
-        }
-
-        console.log(`Stored results in ${program.output}`);
-      });
+      var a = result;
+      while(a.length) {
+        const fileContent = await convertFunc(a.splice(0, pagination), writeHeader); //This would process certain amount of elements at a time
+        fs.appendFile(program.output, fileContent, (error) => {
+          if (error) {
+            throw error;
+          }
+          console.log(`Stored ${pagination} results in ${program.output}`);
+        });
+        writeHeader = false;
+      }
     } catch (error) {
       console.error(chalk.red(error));
       process.exit(1);
