@@ -58,7 +58,7 @@ async function fetchFromGraph(
   first = PAGINATION_SIZE,
 ) {
   const query = `{
-    ${name}(first: ${first}, orderBy: id, where: {id_gt: "${lastID}", ${where}, time_gt: "1690754400", time_lt: "1704150000"}) {
+    ${name}(first: ${first}, orderBy: id, where: {id_gt: "${lastID}", ${where}}) {
       ${fields}
     }
   }`;
