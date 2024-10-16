@@ -81,7 +81,7 @@ Circles statistics and analysis toolkit
 
 Options:
   -V, --version                output the version number
-  -e, --endpoint <url>         graphQL subgraph endpoint (default: "https://api.thegraph.com/..")
+  -e, --endpoint <url>         graphQL subgraph endpoint (default: "https://graph.provisioning.circles.garden/..")
   -f, --format <csv|json>      file format of output file (default: "csv")
   -o, --output <path>          optional file output for tabular data
   -s, --relayer_address <str>  address of relayer funder (default: "0x0739..")
