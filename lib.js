@@ -8,7 +8,7 @@ const PAGINATION_SIZE = 1000;
 
 const configuration = {
   endpoint:
-    'https://graph.provisioning.circles.garden/subgraphs/name/circlesubi/circles-ubi',
+    'https://graph.infra.circles.garden/subgraphs/name/circlesubi/circles-ubi',
   relayerAddresses: ['0x0739a8d036c966ac9161ea14855ce0f94c15b87b', '0x9944ce8e27ce1f16c4003f108b1c09e5ae011ba0'],
   format: 'csv',
   log: undefined,
@@ -58,7 +58,7 @@ async function fetchFromGraph(
   first = PAGINATION_SIZE,
 ) {
   const query = `{
-    ${name}(first: ${first}, orderBy: id, where: {id_gt: "${lastID}", ${where}}) {
+    ${name}(first: ${first}, orderBy: id, where: {id_gt: "${lastID}", ${where}, time_gt: "1690754400", time_lt: "1704150000"}) {
       ${fields}
     }
   }`;
